@@ -1,0 +1,48 @@
+{
+    # kubease:Channel: {{ .Channel }}
+    inputs.nixpkgs.url = "{{ .Channel }}";
+
+    # kubease:HomeManagerChannel: {{ .HomeManagerChannel }}
+    inputs.home-manager = {
+        url = "{{ .HomeManagerChannel }}";
+        inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    outputs = { nixpkgs, home-manager, ... }:
+    let
+        # kubease:System: {{ .System }}
+        system = "{{ .System }}";
+
+        pkgs = import nixpkgs {
+            inherit system;
+        };
+    in
+    {
+        homeConfigurations.myprofile =
+            home-manager.lib.homeManagerConfiguration {
+                inherit pkgs;
+
+                modules = [
+                    {
+                        # kubease:Pkgs: {{ join .Pkgs }}
+                        home.packages = with pkgs; [
+                            {{- range $key, $value := .Pkgs }}
+                            {{ $key }}
+                            {{- end }}
+                        ];
+
+                        # kubease:HomeStateVersion: {{ .HomeStateVersion }}
+                        home.stateVersion = "{{ .HomeStateVersion }}";
+
+                        # kubease:Username: {{ .Username }}
+                        home.username = "{{ .Username }}";
+
+                        # kubease:HomeDirectory: {{ .HomeDirectory }}
+                        home.homeDirectory = "{{ .HomeDirectory }}";
+
+                        programs.home-manager.enable = true;
+                    }
+                ];
+            };
+    };
+}

@@ -18,25 +18,6 @@ func Bootstrap() error {
 }
 
 func buildKubernetes() error {
-	if err := addDependency("kubernetes"); err != nil {
-		return err
-	}
-
-	if err := switchProfile(); err != nil {
-		return err
-	}
-
-	if err := checkDep("kubeadm"); err != nil {
-		return err
-	}
-
-	if err := checkDep("kubectl"); err != nil {
-		return err
-	}
-
-	if err := checkDep("kubelet"); err != nil {
-		return err
-	}
 
 	return nil
 }

@@ -113,7 +113,7 @@ func hasExperimentalFeatures(config string) error {
 			}
 
 			if found == true {
-				errAgg = fmt.Sprint("%s %s", errAgg, feature)
+				errAgg = fmt.Sprintf("%s %s", errAgg, feature)
 			}
 		}
 
