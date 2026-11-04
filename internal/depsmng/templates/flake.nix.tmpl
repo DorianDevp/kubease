@@ -1,48 +1,33 @@
 {
-    # kubease:Channel: {{ .Channel }}
-    inputs.nixpkgs.url = "{{ .Channel }}";
+  description = "kubease Home Manager configuration";
 
-    # kubease:HomeManagerChannel: {{ .HomeManagerChannel }}
-    inputs.home-manager = {
-        url = "{{ .HomeManagerChannel }}";
-        inputs.nixpkgs.follows = "nixpkgs";
+  inputs = {
+    nixpkgs.url = "{{ .Channel }}";
+
+    home-manager = {
+      url = "{{ .HomeManagerChannel }}";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
+  };
 
-    outputs = { nixpkgs, home-manager, ... }:
-    let
-        # kubease:System: {{ .System }}
-        system = "{{ .System }}";
+  outputs = { nixpkgs, home-manager, ... }: {
+    homeConfigurations.{{ quote .Username }} =
+      home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.{{ quote .System }};
 
-        pkgs = import nixpkgs {
-            inherit system;
-        };
-    in
-    {
-        homeConfigurations.myprofile =
-            home-manager.lib.homeManagerConfiguration {
-                inherit pkgs;
+        modules = [
+          ({ pkgs, ... }: {
+            home.username = {{ quote .Username }};
+            home.homeDirectory = {{ quote .HomeDirectory }};
+            home.stateVersion = {{ quote .HomeStateVersion }};
 
-                modules = [
-                    {
-                        # kubease:Pkgs: {{ join .Pkgs }}
-                        home.packages = with pkgs; [
-                            {{- range $key, $value := .Pkgs }}
-                            {{ $key }}
-                            {{- end }}
-                        ];
+            programs.home-manager.enable = true;
 
-                        # kubease:HomeStateVersion: {{ .HomeStateVersion }}
-                        home.stateVersion = "{{ .HomeStateVersion }}";
-
-                        # kubease:Username: {{ .Username }}
-                        home.username = "{{ .Username }}";
-
-                        # kubease:HomeDirectory: {{ .HomeDirectory }}
-                        home.homeDirectory = "{{ .HomeDirectory }}";
-
-                        programs.home-manager.enable = true;
-                    }
-                ];
-            };
-    };
+            home.packages = with pkgs; [
+              {{ join .Pkgs }}
+            ];
+          })
+        ];
+      };
+  };
 }

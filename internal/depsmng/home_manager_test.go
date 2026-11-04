@@ -2,14 +2,15 @@ package depsmng
 
 import (
 	"os"
+	"os/user"
 	"testing"
 )
 
 func TestAddingPackages(t *testing.T) {
-	data := &UserData{ Username: "dorian", HomeDirectory: "/home/dorian" }
+	data := &user.User{ Username: "dorian", HomeDir: "/home/dorian" }
 
-	var fc FlakeConfig
-	flakeConfig := fc.New(data)
+	var hm homeManager
+	flakeConfig := hm.NewFlake(data)
 
 	flakeConfig.addDependency("kubernetes")
 	flakeConfig.addDependency("wireguard")
@@ -17,40 +18,35 @@ func TestAddingPackages(t *testing.T) {
 	pkgs := flakeConfig.Pkgs
 
 	if _, ok := pkgs["kubernetes"]; ok == false {
-		t.Errorf("Expected kubernetes in pkgs")
+		t.Fatalf("Expected kubernetes in pkgs")
 	}
 
 	if _, ok := pkgs["wireguard"]; ok == false {
-		t.Errorf("No wireguard")
+		t.Fatalf("No wireguard")
 	}
 }
 
 func TestCreatingConfig(t *testing.T) {
-	data := &UserData{ Username: "dorian", HomeDirectory: "/home/dorian" }
+	data := &user.User{ Username: "dorian", HomeDir: t.TempDir() }
 
-	var fc FlakeConfig
-	flakeConfig := fc.New(data)
+	var hm homeManager
+	flakeConfig := hm.NewFlake(data)
 
 	flakeConfig.addDependency("kubernetes")
 	flakeConfig.addDependency("wireguard")
 
 	err := flakeConfig.SetupConfig()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
-	if dir, err := os.Stat(flakeConfig.flakeDirPath()); os.IsNotExist(err) {
-		t.Error(err)
-		return
+	if dir, err := os.Stat(flakeConfig.flakeDirPath()); err != nil {
+		t.Fatal(err)
 	} else if dir.IsDir() == false {
-		t.Errorf("Flake Dir Path '%s' was created but is not a directory", flakeConfig.flakeDirPath())
-		return
+		t.Fatalf("Flake Dir Path '%s' was created but is not a directory", flakeConfig.flakeDirPath())
 	}
 
-	if _, err := os.Stat(flakeConfig.flakeConfigPath()); os.IsNotExist(err) {
-		t.Error(err)
-		return
+	if _, err := os.Stat(flakeConfig.flakeConfigPath()); err != nil {
+		t.Fatal(err)
 	} 
-
-	// os.RemoveAll(flakeConfig.flakeDirPath())
 }

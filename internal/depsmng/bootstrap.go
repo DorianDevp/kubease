@@ -1,23 +1,30 @@
 package depsmng
 
-func Bootstrap() error {
-	if err := installNix(); err != nil {
-		return err
+import (
+	"os/user"
+)
+
+func Bootstrap() (*FlakeConfig, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return nil, err
 	}
 
-	if err := checkFlakes(); err != nil {
-		return err
+	nix, err := installNix() 
+	if err != nil {
+		return nil, err
 	}
 
-	if err := buildKubernetes(); err != nil {
-		return err
+	if err = nix.installHomeManager(); err != nil {
+		return nil, err
 	}
 
+	buildKubeaseNixFlake(nix.HomeManager, usr)
 	
-	return nil
+	if err := nix.HomeManager.switchProfile(); err != nil {
+		return nil, err 
+	}
+	
+	return nix.HomeManager.Flake, nil
 }
 
-func buildKubernetes() error {
-
-	return nil
-}

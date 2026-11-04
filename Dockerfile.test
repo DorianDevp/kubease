@@ -1,0 +1,31 @@
+FROM jrei/systemd-ubuntu:26.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG GO_VERSION=1.27.3
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    sudo \
+    git \
+    xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL \
+    "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" \
+    -o /tmp/go.tar.gz \
+    && tar -C /usr/local -xzf /tmp/go.tar.gz \
+    && rm /tmp/go.tar.gz
+
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+RUN useradd -m -s /bin/bash test \
+    && usermod -aG sudo test \
+    && echo "test ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/test \
+    && chmod 0440 /etc/sudoers.d/test
+
+WORKDIR /app
+COPY . .
+
+CMD [ "go", "test", "kubease/internal/depsmng" ]
